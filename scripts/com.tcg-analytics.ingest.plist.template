@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  launchd agent template for the scheduled ingest (macOS).
+  Install:
+    1. Replace __PROJECT_DIR__, __NODE_BIN__, and __HOME__ below.
+    2. cp to ~/Library/LaunchAgents/com.tcg-analytics.ingest.plist
+    3. launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.tcg-analytics.ingest.plist
+  Disable:  launchctl bootout gui/$(id -u)/com.tcg-analytics.ingest
+  Find node bin dir:  dirname "$(which node)"
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.tcg-analytics.ingest</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>__PROJECT_DIR__/scripts/ingest-daily.sh</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>__PROJECT_DIR__</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>__NODE_BIN__:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>NVM_DIR</key>
+        <string>__HOME__/.nvm</string>
+    </dict>
+
+    <!-- Fire daily at 06:00; the wrapper's timestamp guard limits actual syncs
+         to ~every other day (fits the JustTCG monthly request budget). -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>6</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>__HOME__/Library/Logs/tcg-analytics-ingest.log</string>
+    <key>StandardErrorPath</key>
+    <string>__HOME__/Library/Logs/tcg-analytics-ingest.log</string>
+</dict>
+</plist>

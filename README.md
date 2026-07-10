@@ -45,10 +45,31 @@ npm run ingest -- --set base-set-pokemon   # one set (quick test)
 npm run ingest -- --incremental       # skip sets synced in the last 20h
 ```
 
-A full sync pulls every Pokémon set's English cards + pricing (~a few hundred
-API requests, ~4–8 min on the Starter plan). It's idempotent and
-crash/quota-resumable — rerun any time. Run it **once daily** to keep the
-7-day movers fresh (fits the ~10k/month request budget).
+A full sync pulls every Pokémon set's English cards + pricing (~420 API
+requests, ~10 min on the Starter plan). It's idempotent and crash/quota-resumable
+— rerun any time.
+
+#### Scheduled sync (macOS)
+
+A launchd agent runs the sync automatically. It fires daily at 06:00, but
+`scripts/ingest-daily.sh` enforces an **every-other-day** cadence via a timestamp
+guard (`.ingest-last-run`), which keeps the monthly total (~6.3k) under the 10k
+JustTCG cap.
+
+```bash
+# Install (fill in your paths — see the template header):
+#   __PROJECT_DIR__ = repo path, __NODE_BIN__ = `dirname "$(which node)"`, __HOME__ = $HOME
+cp scripts/com.tcg-analytics.ingest.plist.template \
+   ~/Library/LaunchAgents/com.tcg-analytics.ingest.plist   # then edit placeholders
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.tcg-analytics.ingest.plist
+
+launchctl list | grep tcg-analytics          # confirm it's loaded
+tail -f ~/Library/Logs/tcg-analytics-ingest.log   # watch runs
+launchctl bootout gui/$(id -u)/com.tcg-analytics.ingest   # disable
+```
+
+Run the wrapper manually any time with `bash scripts/ingest-daily.sh` (it still
+respects the 2-day guard; delete `.ingest-last-run` to force a run).
 
 ### 5. Run the dev server
 
@@ -140,7 +161,6 @@ docs/                   Subsystem plans (see docs/README.md)
 
 ## Roadmap
 
-- Automate the daily ingest on a schedule.
 - Surface our own snapshot-derived 7d change (once ≥7 days of history) alongside JustTCG's.
 - Sealed-product and multi-language views.
 - Support additional TCGs (Riftbound and beyond).
