@@ -11,6 +11,9 @@ conventions and `specs/requirements.md` for product requirements.
   - [`progress.md`](./7day-movers-export/progress.md) — ordered, phase-by-phase task checklist.
 - **[automated-ingest.md](./automated-ingest.md)** — a learning guide to how the scheduled
   (launchd) sync works: the plist, the every-other-day guard, nvm handling, and debugging.
+- **[volatility-quality-filter.md](./volatility-quality-filter.md)** — investigation of market
+  volatility (`priceChangesCount7d` / `covPrice7d`) and the churn-based quality filter that keeps
+  clean movers and drops thin/thrashy ones.
 
 ## Conventions
 

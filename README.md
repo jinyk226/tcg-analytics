@@ -87,6 +87,13 @@ Evolution, …), **price band** (default $0.50–$20), direction, and list size.
 The price band matches if either the current or the 7-days-ago price is in
 range, so cards that mooned past the band still surface.
 
+A **quality filter** screens out thin/thrashy markets: **Max chg (7d)** caps
+`priceChangesCount7d` (default 5 — drops the ~half of raw movers that churn 6+
+times a week), and an optional **Max COV** caps dispersion. The **Chg 7d** column
+shows each card's change count (COV in its tooltip). See
+[`docs/volatility-quality-filter.md`](docs/volatility-quality-filter.md) for the
+analysis behind the defaults.
+
 - **Copy** (per row) puts `Name (#number) — Printing, NM / Set / $Value /
   ±%change (7d)` on the clipboard for video captions.
 - **Batch export images** downloads a ZIP of the current list's card images
