@@ -167,6 +167,8 @@ async function upsertVariant(cardId: number, v: JtVariant, recordedAt: Date) {
     avgPrice: v.avgPrice ?? null,
     minPrice7d: v.minPrice7d ?? null,
     maxPrice7d: v.maxPrice7d ?? null,
+    priceChangesCount7d: v.priceChangesCount7d ?? null,
+    covPrice7d: v.covPrice7d ?? null,
     startPrice7d,
     apiLastUpdated,
     lastSeenAt: new Date(),

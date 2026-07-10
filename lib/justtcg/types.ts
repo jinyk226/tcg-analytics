@@ -13,6 +13,8 @@ export interface JtVariant {
   avgPrice?: number | null; // 7-day average
   minPrice7d?: number | null;
   maxPrice7d?: number | null;
+  priceChangesCount7d?: number | null; // # of discrete price changes over 7d
+  covPrice7d?: number | null; // coefficient of variation (stddev/mean) over 7d
   lastUpdated?: number; // epoch seconds
 }
 

@@ -110,6 +110,12 @@ model CardVariant {
   avgPrice        Float?
   minPrice7d      Float?
   maxPrice7d      Float?
+  /// 7-day volatility signals (used to filter out thin/churny "movers").
+  /// priceChangesCount7d = # of discrete price changes in the window (0 = flat,
+  /// 1 = one clean step, high = churning). covPrice7d = coefficient of variation
+  /// (stddev/mean); interpret relative to the move size, not as an absolute cap.
+  priceChangesCount7d Int?
+  covPrice7d          Float?
   /// Derived "7 days ago" entry price = latestPrice / (1 + priceChange7d/100).
   /// Enables the either-end-in-band price filter; null when priceChange7d is null.
   startPrice7d    Float?
@@ -127,6 +133,7 @@ model CardVariant {
   @@index([priceChange7d])
   @@index([latestPrice])
   @@index([startPrice7d])
+  @@index([priceChangesCount7d])
   @@map("card_variants")
 }
 
