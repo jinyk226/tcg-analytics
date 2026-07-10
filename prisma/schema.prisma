@@ -1,0 +1,125 @@
+// TCG Analytics — Prisma schema
+// Models the JustTCG data hierarchy (Game → Set → Card → Variant → PriceSnapshot)
+// in a TCG-agnostic way so Pokémon, Riftbound, and others share one shape.
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+/// A trading card game (e.g. "pokemon", "riftbound"). Top of the hierarchy.
+model Game {
+  id        Int      @id @default(autoincrement())
+  /// Stable slug used by JustTCG, e.g. "pokemon". Unique across the platform.
+  key       String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sets  Set[]
+  cards Card[]
+
+  @@map("games")
+}
+
+/// A card set / expansion within a game.
+model Set {
+  id          Int       @id @default(autoincrement())
+  /// JustTCG set identifier, if provided by the API.
+  justTcgId   String?   @unique
+  gameId      Int
+  name        String
+  /// Short set code, e.g. "sv1". Unique within a game.
+  code        String?
+  releaseDate DateTime?
+  cardCount   Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  game  Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  cards Card[]
+
+  @@unique([gameId, code])
+  @@index([gameId])
+  @@map("sets")
+}
+
+/// A single card. Printings/conditions that carry prices live in CardVariant.
+model Card {
+  id          Int      @id @default(autoincrement())
+  /// JustTCG card id — the canonical external identifier.
+  justTcgId   String   @unique
+  gameId      Int
+  setId       Int?
+  name        String
+  /// Collector number within the set, e.g. "25" or "TG05".
+  number      String?
+  rarity      String?
+  /// TCGplayer product id, handy for cross-referencing.
+  tcgplayerId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  game     Game          @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  set      Set?          @relation(fields: [setId], references: [id], onDelete: SetNull)
+  variants CardVariant[]
+
+  @@index([gameId])
+  @@index([setId])
+  @@index([name])
+  @@map("cards")
+}
+
+/// A priceable printing+condition of a card (e.g. Holofoil / Near Mint).
+/// Holds the latest snapshot values; historical points live in PriceSnapshot.
+model CardVariant {
+  id        Int      @id @default(autoincrement())
+  /// JustTCG variant id, if provided.
+  justTcgId String?  @unique
+  cardId    Int
+  /// e.g. "Near Mint", "Lightly Played".
+  condition String?
+  /// e.g. "Normal", "Holofoil", "Reverse Holofoil".
+  printing  String?
+  language  String?  @default("EN")
+
+  /// Latest known market price, denormalized for quick reads.
+  latestPrice Float?
+  currency    String  @default("USD")
+  lastSeenAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  card      Card           @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  snapshots PriceSnapshot[]
+
+  @@unique([cardId, printing, condition, language])
+  @@index([cardId])
+  @@map("card_variants")
+}
+
+/// A point-in-time price observation for a variant — the core time series
+/// that analytics queries aggregate over.
+model PriceSnapshot {
+  id        Int      @id @default(autoincrement())
+  variantId Int
+  price     Float
+  currency  String   @default("USD")
+  /// Optional richer fields JustTCG exposes for trend analysis.
+  marketPrice Float?
+  lowPrice    Float?
+  highPrice   Float?
+  recordedAt DateTime @default(now())
+
+  variant CardVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([variantId, recordedAt])
+  @@index([variantId, recordedAt])
+  @@map("price_snapshots")
+}
