@@ -9,6 +9,8 @@ conventions and `specs/requirements.md` for product requirements.
   ingestion + 7-day gainers/losers view with per-row copy and batch image export.
   - [`plan.md`](./7day-movers-export/plan.md) — full approved implementation plan.
   - [`progress.md`](./7day-movers-export/progress.md) — ordered, phase-by-phase task checklist.
+- **[automated-ingest.md](./automated-ingest.md)** — a learning guide to how the scheduled
+  (launchd) sync works: the plist, the every-other-day guard, nvm handling, and debugging.
 
 ## Conventions
 
