@@ -1,0 +1,13 @@
+{
+  "threshold": 1,
+  "reporters": ["console"],
+  "absolute": true,
+  "gitignore": true,
+  "pattern": "**/*.{ts,tsx}",
+  "ignore": [
+    "**/node_modules/**",
+    "**/.next/**",
+    "lib/generated/**",
+    "**/*.d.ts"
+  ]
+}

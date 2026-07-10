@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "lint:dead": "knip",
+    "lint:dupes": "jscpd",
+    "lint:quality": "npm run lint:dupes && npm run lint:dead",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
@@ -21,6 +24,7 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@eslint-community/eslint-plugin-eslint-comments": "^4.7.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -28,6 +32,8 @@
     "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
+    "jscpd": "^5.0.12",
+    "knip": "^6.26.0",
     "prisma": "^7.8.0",
     "tailwindcss": "^4",
     "typescript": "^5"
