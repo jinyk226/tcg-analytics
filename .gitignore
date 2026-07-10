@@ -44,5 +44,10 @@ next-env.d.ts
 /lib/generated/prisma
 *.db
 *.db-journal
+*.db-wal
+*.db-shm
 
 /app/generated/prisma
+
+# playwright mcp artifacts
+.playwright-mcp/

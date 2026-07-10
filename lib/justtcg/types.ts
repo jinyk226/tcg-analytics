@@ -42,7 +42,7 @@ export interface JtSet {
 }
 
 /** Offset-pagination envelope echoed on list responses. */
-export interface JtMeta {
+interface JtMeta {
   total: number;
   limit: number;
   offset: number;

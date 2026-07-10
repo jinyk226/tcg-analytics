@@ -30,7 +30,7 @@ const ERA_STARTS: ReadonlyArray<{ series: string; start: string }> = [
   { series: "Base", start: "1999-01-01" },
 ];
 
-export const UNCATEGORIZED = "Uncategorized";
+const UNCATEGORIZED = "Uncategorized";
 
 /** Resolve a set's series from a curated override, else its release date. */
 export function resolveSeries(input: {
