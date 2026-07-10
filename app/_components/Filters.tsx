@@ -10,6 +10,8 @@ export interface FilterState {
   maxPrice: number;
   series: string; // "" = all
   limit: number;
+  maxPriceChanges: number; // churn cap; 0 = off
+  maxCov: number; // dispersion cap; 0 = off
 }
 
 export function Filters({
@@ -25,6 +27,8 @@ export function Filters({
   const [minPrice, setMinPrice] = useState(String(current.minPrice));
   const [maxPrice, setMaxPrice] = useState(String(current.maxPrice));
   const [limit, setLimit] = useState(String(current.limit));
+  const [maxChanges, setMaxChanges] = useState(String(current.maxPriceChanges));
+  const [maxCov, setMaxCov] = useState(current.maxCov ? String(current.maxCov) : "");
 
   function push(patch: Partial<Record<keyof FilterState, string>>) {
     const merged: Record<string, string> = {
@@ -33,6 +37,8 @@ export function Filters({
       minPrice,
       maxPrice,
       limit,
+      maxPriceChanges: maxChanges,
+      maxCov,
       ...patch,
     };
     const params = new URLSearchParams();
@@ -112,6 +118,35 @@ export function Filters({
           />
         </div>
       </div>
+
+      {/* Quality guards */}
+      <label className="flex flex-col gap-1">
+        <span className="text-xs font-medium opacity-60" title="Drop cards whose price changed more than this many times in 7 days (thin/churny markets). 0 = off.">
+          Max chg (7d)
+        </span>
+        <input
+          inputMode="numeric"
+          value={maxChanges}
+          onChange={(e) => setMaxChanges(e.target.value)}
+          className="w-20 rounded-md border border-black/15 bg-background px-2 py-1.5 text-sm dark:border-white/15"
+          aria-label="Maximum 7-day price changes (0 = off)"
+          placeholder="off"
+        />
+      </label>
+
+      <label className="flex flex-col gap-1">
+        <span className="text-xs font-medium opacity-60" title="Drop cards whose 7d coefficient of variation exceeds this. Optional — COV grows with move size, so leave blank unless you want only ultra-stable holds.">
+          Max COV
+        </span>
+        <input
+          inputMode="decimal"
+          value={maxCov}
+          onChange={(e) => setMaxCov(e.target.value)}
+          className="w-20 rounded-md border border-black/15 bg-background px-2 py-1.5 text-sm dark:border-white/15"
+          aria-label="Maximum 7-day coefficient of variation (blank = off)"
+          placeholder="off"
+        />
+      </label>
 
       {/* Limit */}
       <label className="flex flex-col gap-1">

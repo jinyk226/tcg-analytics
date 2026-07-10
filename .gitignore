@@ -54,3 +54,6 @@ next-env.d.ts
 
 # scheduled ingest run-stamp
 .ingest-last-run
+
+# stray playwright screenshots saved to repo root
+/*.png

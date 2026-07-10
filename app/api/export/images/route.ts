@@ -3,6 +3,7 @@ import { IMAGE_SIZES, tcgplayerImageUrl } from "@/lib/images";
 import {
   DEFAULT_LIMIT,
   DEFAULT_MAX_PRICE,
+  DEFAULT_MAX_PRICE_CHANGES,
   DEFAULT_MIN_PRICE,
   getMovers,
   type MoverDirection,
@@ -42,8 +43,20 @@ export async function GET(request: Request) {
   const maxPrice = Number(params.get("maxPrice")) || DEFAULT_MAX_PRICE;
   const series = params.get("series") || undefined;
   const limit = Math.max(1, Math.min(200, Number(params.get("limit")) || DEFAULT_LIMIT));
+  const maxPriceChanges = params.has("maxPriceChanges")
+    ? Math.max(0, Number(params.get("maxPriceChanges")) || 0)
+    : DEFAULT_MAX_PRICE_CHANGES;
+  const maxCov = Math.max(0, Number(params.get("maxCov")) || 0);
 
-  const rows = await getMovers({ direction, minPrice, maxPrice, series, limit });
+  const rows = await getMovers({
+    direction,
+    minPrice,
+    maxPrice,
+    series,
+    limit,
+    maxPriceChanges: maxPriceChanges || undefined,
+    maxCov: maxCov || undefined,
+  });
 
   // Dedupe by tcgplayerId (a card can have multiple variant rows), keeping the
   // best-ranked occurrence; drop rows without a product id.

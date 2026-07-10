@@ -6,6 +6,7 @@ import { tcgplayerImageUrl } from "@/lib/images";
 import {
   DEFAULT_LIMIT,
   DEFAULT_MAX_PRICE,
+  DEFAULT_MAX_PRICE_CHANGES,
   DEFAULT_MIN_PRICE,
   getDataFreshness,
   getMovers,
@@ -45,6 +46,8 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
     maxPrice: num(sp.maxPrice, DEFAULT_MAX_PRICE),
     series: str(sp.series),
     limit: Math.max(1, Math.min(200, num(sp.limit, DEFAULT_LIMIT))),
+    maxPriceChanges: Math.max(0, num(sp.maxPriceChanges, DEFAULT_MAX_PRICE_CHANGES)),
+    maxCov: Math.max(0, num(sp.maxCov, 0)),
   };
 
   const [rows, seriesList, freshness] = await Promise.all([
@@ -54,17 +57,23 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
       maxPrice: filters.maxPrice,
       series: filters.series || undefined,
       limit: filters.limit,
+      maxPriceChanges: filters.maxPriceChanges || undefined,
+      maxCov: filters.maxCov || undefined,
     }),
     getSeriesList(),
     getDataFreshness(),
   ]);
 
-  // Query string mirroring the current filters, for the export download.
+  // Query string mirroring the current filters, for the export download (so the
+  // ZIP matches exactly what's on screen). The volatility metrics are excluded
+  // from copy/filenames, but the quality filters still shape the list.
   const exportQuery = new URLSearchParams({
     direction: filters.direction,
     minPrice: String(filters.minPrice),
     maxPrice: String(filters.maxPrice),
     limit: String(filters.limit),
+    maxPriceChanges: String(filters.maxPriceChanges),
+    ...(filters.maxCov ? { maxCov: String(filters.maxCov) } : {}),
     ...(filters.series ? { series: filters.series } : {}),
   }).toString();
 
@@ -92,6 +101,22 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
             running an ingest.
           </p>
         ) : (
+          <>
+            {/* Column header (aligns with the right-side cells of each row). */}
+            <div className="flex items-center gap-4 border-b border-black/10 px-3 py-2 text-[11px] font-medium uppercase tracking-wide opacity-45 dark:border-white/10">
+              <span className="w-6 shrink-0" />
+              <span className="w-12 shrink-0" />
+              <span className="min-w-0 flex-1">Card</span>
+              <span className="w-20 shrink-0 text-right">Value</span>
+              <span
+                className="w-14 shrink-0 text-right"
+                title="priceChangesCount7d — number of discrete price changes in the last 7 days. Lower = cleaner move; high = thin/churny market."
+              >
+                Chg 7d
+              </span>
+              <span className="w-16 shrink-0 text-right">7d %</span>
+              <span className="w-9 shrink-0" />
+            </div>
           <ul className="divide-y divide-black/10 dark:divide-white/10">
             {rows.map((r) => {
               const thumb = tcgplayerImageUrl(r.tcgplayerId, "400x400");
@@ -124,10 +149,20 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
                       {r.printing} · NM · {r.setName}
                     </p>
                   </div>
-                  <span className="shrink-0 text-right font-semibold tabular-nums">
+                  <span className="w-20 shrink-0 text-right font-semibold tabular-nums">
                     {r.value != null ? `$${r.value.toFixed(2)}` : "—"}
                   </span>
-                  <span className="w-20 shrink-0 text-right">
+                  <span
+                    className="w-14 shrink-0 text-right text-sm tabular-nums opacity-70"
+                    title={
+                      r.cov7d != null
+                        ? `${r.priceChanges7d ?? 0} price change${r.priceChanges7d === 1 ? "" : "s"} in 7d · COV ${(r.cov7d * 100).toFixed(1)}%`
+                        : `${r.priceChanges7d ?? 0} price change${r.priceChanges7d === 1 ? "" : "s"} in 7d`
+                    }
+                  >
+                    {r.priceChanges7d ?? "—"}
+                  </span>
+                  <span className="w-16 shrink-0 text-right">
                     <PctBadge pct={r.pct} />
                   </span>
                   <CopyButton text={copyText(r)} />
@@ -135,6 +170,7 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
               );
             })}
           </ul>
+          </>
         )}
       </div>
     </main>
