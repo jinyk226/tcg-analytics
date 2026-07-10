@@ -26,6 +26,12 @@ const eslintConfig = defineConfig([
       "@eslint-community/eslint-comments/disable-enable-pair": "error",
     },
   },
+  // Card thumbnails are remote TCGplayer CDN images rendered with a plain <img>
+  // by design (avoids next/image remotePatterns config for a local data tool),
+  // so the img-element warning doesn't apply here.
+  {
+    rules: { "@next/next/no-img-element": "off" },
+  },
   // Component discipline: presentational leaf components live in an `_ui/`
   // directory and must be stateless. Lift state to a parent container/`_components/`.
   {
