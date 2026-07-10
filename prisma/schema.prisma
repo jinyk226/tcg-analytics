@@ -38,6 +38,16 @@ model Set {
   code        String?
   releaseDate DateTime?
   cardCount   Int?
+  /// Era/series this set rolls up into, e.g. "Scarlet & Violet". Assigned during
+  /// ingestion by lib/justtcg/series.ts (curated map + release-date fallback);
+  /// JustTCG has no series field of its own.
+  series      String?
+  /// When this set's cards were last synced from JustTCG (drives resumable
+  /// ingestion order and the UI freshness badge).
+  lastSyncedAt DateTime?
+  /// Optional aggregate analytics JustTCG exposes on the set object.
+  setValueUsd         Float?
+  setValueChange7dPct Float?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -46,6 +56,7 @@ model Set {
 
   @@unique([gameId, code])
   @@index([gameId])
+  @@index([series])
   @@map("sets")
 }
 
@@ -93,6 +104,18 @@ model CardVariant {
   currency    String  @default("USD")
   lastSeenAt  DateTime?
 
+  /// JustTCG price-analytics fields (percentages are % values, e.g. -2.1 = -2.1%).
+  priceChange7d   Float?
+  priceChange24hr Float?
+  avgPrice        Float?
+  minPrice7d      Float?
+  maxPrice7d      Float?
+  /// Derived "7 days ago" entry price = latestPrice / (1 + priceChange7d/100).
+  /// Enables the either-end-in-band price filter; null when priceChange7d is null.
+  startPrice7d    Float?
+  /// JustTCG variant `lastUpdated` (epoch seconds) as a timestamp.
+  apiLastUpdated  DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -101,6 +124,9 @@ model CardVariant {
 
   @@unique([cardId, printing, condition, language])
   @@index([cardId])
+  @@index([priceChange7d])
+  @@index([latestPrice])
+  @@index([startPrice7d])
   @@map("card_variants")
 }
 

@@ -14,11 +14,13 @@
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
-    "db:reset": "prisma migrate reset"
+    "db:reset": "prisma migrate reset",
+    "ingest": "tsx scripts/ingest.ts"
   },
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "jszip": "^3.10.1",
     "next": "16.2.10",
     "react": "19.2.4",
     "react-dom": "19.2.4"
@@ -36,6 +38,7 @@
     "knip": "^6.26.0",
     "prisma": "^7.8.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.0",
     "typescript": "^5"
   }
 }
