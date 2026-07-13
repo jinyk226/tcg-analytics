@@ -29,6 +29,9 @@ launchd  ──fires──▶  ingest-daily.sh  ──if 2 days passed──▶ 
    └── schedule defined by the .plist
 ```
 
+> **Location matters:** the repo must live *outside* `~/Documents`, `~/Desktop`, and
+> `~/Downloads`, or the scheduled job fails with `exit 126` — see §7 for why.
+
 ---
 
 ## 2. launchd in 5 minutes
@@ -239,14 +242,51 @@ launchctl kickstart -k gui/$(id -u)/com.tcg-analytics.ingest
 bash scripts/ingest-daily.sh
 ```
 
-The single most common failure mode for launchd jobs is a **PATH/environment**
+Two failure modes dominate launchd jobs. The first is a **PATH/environment**
 problem — a command that works in your terminal isn't found by the job because
-its environment is bare. That's exactly what §5 defends against, and why the log
-is the first place to look.
+its environment is bare (that's what §5 defends against). The second is a
+**file-access** problem unique to macOS, covered next.
 
 ---
 
-## 7. Lifecycle: install, disable, reinstall
+## 7. The `~/Documents` trap (macOS TCC) — keep the repo out of protected folders
+
+This one bites hard and the error message doesn't name the real cause. macOS
+**TCC** (Transparency, Consent & Control) protects `~/Documents`, `~/Desktop`, and
+`~/Downloads`: a process may read/enter them only if it holds an explicit grant.
+
+Your interactive Terminal *has* that grant, so `npm run ingest` works when you run
+it by hand. But a **launchd job runs unattended with no such grant.** If the repo
+lives under one of those folders, the scheduled run can't even `cd` into its own
+working directory:
+
+```
+shell-init: error retrieving current directory: getcwd: … Operation not permitted
+/bin/bash: …/scripts/ingest-daily.sh: Operation not permitted
+```
+
+launchd records this as **`last exit code = 126`** ("cannot execute"). Everything
+*looks* fine — the script is `+x`, the plist `PATH` is correct, it runs perfectly
+by hand — because the problem is the **location**, not the code.
+
+**The fix we use: keep the repo outside protected folders.** This project lives at
+`~/coding/jinyk226/tcg-analytics` — deliberately **not** under `~/Documents` — so the
+background job has unrestricted access with no special permissions. (It originally
+lived under `~/Documents` and every scheduled run failed with 126 until it was
+moved.)
+
+Alternative, if you must keep it under `~/Documents`: grant **Full Disk Access** to
+`/bin/bash` in System Settings → Privacy & Security → Full Disk Access (⌘⇧G →
+`/bin/bash`). It works, but it's broad — *every* script bash runs then gains
+full-disk access — which is why relocating the repo is the cleaner fix.
+
+**How to recognize it:** `launchctl print … | grep "last exit code"` shows `126`,
+and the log is full of `Operation not permitted`. After relocating (or granting
+access), `launchctl kickstart -k …` and confirm the code flips to `0`.
+
+---
+
+## 8. Lifecycle: install, disable, reinstall
 
 **Disable** (stop the schedule; leaves files in place):
 ```bash
@@ -274,7 +314,7 @@ update the `PATH` line in the installed plist to the new
 
 ---
 
-## 8. Recap: the design in one breath
+## 9. Recap: the design in one breath
 
 launchd fires a daily 6am alarm (and catches up after sleep). A wrapper turns
 that daily alarm into an *every-other-day* action using a timestamp file, keeps

@@ -7,6 +7,11 @@
     3. launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.tcg-analytics.ingest.plist
   Disable:  launchctl bootout gui/$(id -u)/com.tcg-analytics.ingest
   Find node bin dir:  dirname "$(which node)"
+
+  IMPORTANT (macOS): __PROJECT_DIR__ must live OUTSIDE ~/Documents, ~/Desktop, and
+  ~/Downloads. Those folders are TCC-protected; a launchd job can't read them and
+  fails with "Operation not permitted" / exit code 126. See
+  docs/automated-ingest.md §7.
 -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">

@@ -56,6 +56,11 @@ A launchd agent runs the sync automatically. It fires daily at 06:00, but
 guard (`.ingest-last-run`), which keeps the monthly total (~6.3k) under the 10k
 JustTCG cap.
 
+> **macOS:** keep the repo **outside** `~/Documents`, `~/Desktop`, and `~/Downloads`.
+> Those folders are TCC-protected and a background launchd job can't read them —
+> the run fails with `exit 126` / `Operation not permitted`. See
+> [`docs/automated-ingest.md`](docs/automated-ingest.md) §7.
+
 ```bash
 # Install (fill in your paths — see the template header):
 #   __PROJECT_DIR__ = repo path, __NODE_BIN__ = `dirname "$(which node)"`, __HOME__ = $HOME
