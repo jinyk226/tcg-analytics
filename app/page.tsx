@@ -1,8 +1,8 @@
 import { Filters, type FilterState } from "@/app/_components/Filters";
+import { CardThumb } from "@/app/_components/CardThumb";
 import { CopyButton } from "@/app/_components/CopyButton";
 import { ExportButton } from "@/app/_components/ExportButton";
 import { PctBadge } from "@/app/_ui/PctBadge";
-import { tcgplayerImageUrl } from "@/lib/images";
 import {
   DEFAULT_LIMIT,
   DEFAULT_MAX_PRICE,
@@ -166,65 +166,51 @@ export default async function Page({
               >
                 30d %
               </span>
-              <span className="w-9 shrink-0" />
+              <span className="w-20 shrink-0" />
             </div>
             <ul className="divide-y divide-black/10 dark:divide-white/10">
-              {rows.map((r) => {
-                const thumb = tcgplayerImageUrl(r.tcgplayerId, "400x400");
-                return (
-                  <li
-                    key={r.variantId}
-                    className="flex items-center gap-4 p-3 hover:bg-black/[0.02] dark:hover:bg-white/[0.03]"
+              {rows.map((r) => (
+                <li
+                  key={r.variantId}
+                  className="flex items-center gap-4 p-3 hover:bg-black/[0.02] dark:hover:bg-white/[0.03]"
+                >
+                  <span className="w-6 shrink-0 text-right text-sm tabular-nums opacity-40">
+                    {r.rank}
+                  </span>
+                  <CardThumb tcgplayerId={r.tcgplayerId} alt={r.name} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">
+                      {r.name}
+                      {r.number ? (
+                        <span className="opacity-50"> (#{r.number})</span>
+                      ) : null}
+                    </p>
+                    <p className="truncate text-sm opacity-60">
+                      {r.printing} · NM · {r.setName}
+                    </p>
+                  </div>
+                  <span className="w-20 shrink-0 text-right font-semibold tabular-nums">
+                    {r.value != null ? `$${r.value.toFixed(2)}` : "—"}
+                  </span>
+                  <span
+                    className="w-14 shrink-0 text-right text-sm tabular-nums opacity-70"
+                    title={
+                      r.cov7d != null
+                        ? `${r.priceChanges7d ?? 0} price change${r.priceChanges7d === 1 ? "" : "s"} in 7d · COV ${(r.cov7d * 100).toFixed(1)}%`
+                        : `${r.priceChanges7d ?? 0} price change${r.priceChanges7d === 1 ? "" : "s"} in 7d`
+                    }
                   >
-                    <span className="w-6 shrink-0 text-right text-sm tabular-nums opacity-40">
-                      {r.rank}
-                    </span>
-                    {thumb ? (
-                      <img
-                        src={thumb}
-                        alt={r.name}
-                        loading="lazy"
-                        className="h-16 w-12 shrink-0 rounded object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-16 w-12 shrink-0 items-center justify-center rounded bg-black/5 text-[10px] opacity-40 dark:bg-white/10">
-                        no img
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold">
-                        {r.name}
-                        {r.number ? (
-                          <span className="opacity-50"> (#{r.number})</span>
-                        ) : null}
-                      </p>
-                      <p className="truncate text-sm opacity-60">
-                        {r.printing} · NM · {r.setName}
-                      </p>
-                    </div>
-                    <span className="w-20 shrink-0 text-right font-semibold tabular-nums">
-                      {r.value != null ? `$${r.value.toFixed(2)}` : "—"}
-                    </span>
-                    <span
-                      className="w-14 shrink-0 text-right text-sm tabular-nums opacity-70"
-                      title={
-                        r.cov7d != null
-                          ? `${r.priceChanges7d ?? 0} price change${r.priceChanges7d === 1 ? "" : "s"} in 7d · COV ${(r.cov7d * 100).toFixed(1)}%`
-                          : `${r.priceChanges7d ?? 0} price change${r.priceChanges7d === 1 ? "" : "s"} in 7d`
-                      }
-                    >
-                      {r.priceChanges7d ?? "—"}
-                    </span>
-                    <span className="w-16 shrink-0 text-right">
-                      <PctBadge pct={r.pct} />
-                    </span>
-                    <span className="w-16 shrink-0 text-right">
-                      <PctBadge pct={r.pct30d} />
-                    </span>
-                    <CopyButton text={copyText(r)} />
-                  </li>
-                );
-              })}
+                    {r.priceChanges7d ?? "—"}
+                  </span>
+                  <span className="w-16 shrink-0 text-right">
+                    <PctBadge pct={r.pct} />
+                  </span>
+                  <span className="w-16 shrink-0 text-right">
+                    <PctBadge pct={r.pct30d} />
+                  </span>
+                  <CopyButton text={copyText(r)} />
+                </li>
+              ))}
             </ul>
           </>
         )}

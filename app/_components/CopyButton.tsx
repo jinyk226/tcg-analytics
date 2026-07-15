@@ -21,7 +21,7 @@ export function CopyButton({ text, label = "Copy" }: { text: string; label?: str
       type="button"
       onClick={onClick}
       title="Copy name, set, value, and % change"
-      className="rounded-md border border-black/15 px-2.5 py-1 text-sm font-medium transition hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+      className="inline-flex w-20 items-center justify-center rounded-md border border-black/15 py-1 text-sm font-medium transition hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
     >
       {copied ? "Copied ✓" : label}
     </button>
