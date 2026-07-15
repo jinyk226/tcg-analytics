@@ -12,14 +12,14 @@ before the next depends on it. Status legend: `[ ]` todo · `[~]` in progress ·
 - [x] **Verify:** `npx tsc --noEmit` clean; `patternsFor(["promos"])` returns the 5 themed-junk patterns; Black Star / Alt-Art / WoTC slugs match none.
 
 ## Phase 1 — Query layer
-- [ ] 1.1 `lib/trends.ts`: widen `MoverFilters.series` to `string[]`; add `excludeCategoryIds?: string[]`.
-- [ ] 1.2 `getMovers` where clause: series `{ in: [...] }`; exclude `NOT { card: { set: { OR: [{ code: { contains } }] } } }` pushed into `qualityAnd` (strict AND).
-- [ ] **Verify:** series-multi + exclude default-on returns expected rows; promo split correct *(plan Verification #2, #3, #4)*.
+- [x] 1.1 `lib/trends.ts`: widen `MoverFilters.series` to `string[]`; add `excludeCategoryIds?: string[]`.
+- [x] 1.2 `getMovers` where clause: series `{ in: [...] }`; exclude `NOT { card: { set: { OR: [{ code: { contains } }] } } }` pushed into `qualityAnd` (strict AND).
+- [x] **Verify:** series-multi + exclude default-on returns expected rows; promo split correct *(plan Verification #2, #3, #4)*.
 
 ## Phase 2 — Page wiring
-- [ ] 2.1 `app/page.tsx`: add `strArray()`; parse `series` (multi) and `exclude` (default-on + `none` sentinel).
-- [ ] 2.2 Forward both to `getMovers`; rebuild `exportQuery` with `append`; update empty-state text.
-- [ ] **Verify:** `/?series=Base&series=XY` and clean `/` (default exclude) render correctly *(plan Verification #2, #3)*.
+- [x] 2.1 `app/page.tsx`: add `strArray()`; parse `series` (multi) and `exclude` (default-on + `none` sentinel).
+- [x] 2.2 Forward both to `getMovers`; rebuild `exportQuery` with `append`; update empty-state text.
+- [x] **Verify:** `/?series=Base&series=XY` and clean `/` (default exclude) render correctly *(plan Verification #2, #3)*.
 
 ## Phase 3 — Filters UI
 - [ ] 3.1 Create `app/_components/MultiSelect.tsx`: batching checkbox dropdown (draft state, commit on close, Select all / Clear, outside-click/Escape).
