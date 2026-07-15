@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { patternsFor } from "@/lib/exclude-categories";
 import { tcgplayerImageUrl } from "@/lib/images";
 
 export type MoverDirection = "gainers" | "losers";
@@ -25,8 +26,11 @@ export interface MoverFilters {
   direction: MoverDirection;
   minPrice?: number;
   maxPrice?: number;
-  series?: string;
+  series?: string[];
   limit?: number;
+  /** Exclude-category ids (see lib/exclude-categories). Sets whose slug matches
+   *  any covered pattern are dropped. Undefined/empty = exclude nothing. */
+  excludeCategoryIds?: string[];
   /** Quality guard: drop cards whose price changed more than this many times in
    *  the 7d window (thin/churny markets). Undefined/0 = no cap. */
   maxPriceChanges?: number;
@@ -60,6 +64,7 @@ export async function getMovers(filters: MoverFilters): Promise<MoverRow[]> {
     limit = DEFAULT_LIMIT,
     maxPriceChanges,
     maxCov,
+    excludeCategoryIds,
   } = filters;
 
   const inBand = { gte: minPrice, lte: maxPrice };
@@ -81,13 +86,29 @@ export async function getMovers(filters: MoverFilters): Promise<MoverRow[]> {
     });
   }
 
+  // Exclude curated product categories by matching the set slug. Kept as its own
+  // AND entry so it never collides with the series `card.set` key below. Strict
+  // AND: exclusions apply even when a series is explicitly selected.
+  const excludePatterns = patternsFor(excludeCategoryIds ?? []);
+  if (excludePatterns.length) {
+    qualityAnd.push({
+      NOT: {
+        card: {
+          set: { OR: excludePatterns.map((p) => ({ code: { contains: p } })) },
+        },
+      },
+    });
+  }
+
   const variants = await db.cardVariant.findMany({
     where: {
       condition: "Near Mint",
       language: "English",
       priceChange7d: { not: null },
       avgPrice: { not: null },
-      ...(series ? { card: { set: { series } } } : {}),
+      ...(series && series.length
+        ? { card: { set: { series: { in: series } } } }
+        : {}),
       AND: [
         { OR: [{ latestPrice: inBand }, { startPrice7d: inBand }] },
         ...qualityAnd,

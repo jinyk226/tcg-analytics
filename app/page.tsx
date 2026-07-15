@@ -14,6 +14,7 @@ import {
   type MoverDirection,
   type MoverRow,
 } from "@/lib/trends";
+import { DEFAULT_EXCLUDE_IDS, EXCLUDE_IDS } from "@/lib/exclude-categories";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,12 @@ function num(value: string | string[] | undefined, fallback: number): number {
 
 function str(value: string | string[] | undefined): string {
   return (Array.isArray(value) ? value[0] : value) ?? "";
+}
+
+/** Normalize a repeated search param to an array ([] when absent). */
+function strArray(value: string | string[] | undefined): string[] {
+  if (value === undefined) return [];
+  return Array.isArray(value) ? value : [value];
 }
 
 /** The exact 4-line clipboard block for a row. */
@@ -47,13 +54,21 @@ export default async function Page({
 }) {
   const sp = await searchParams;
 
+  // Exclude is ON by default: an absent `exclude` param means "exclude all
+  // categories"; an explicit param (incl. the `none` sentinel → []) is honored.
+  const exclude =
+    sp.exclude === undefined
+      ? [...DEFAULT_EXCLUDE_IDS]
+      : strArray(sp.exclude).filter((id) => EXCLUDE_IDS.has(id));
+
   const filters: FilterState = {
     direction: (str(sp.direction) === "losers"
       ? "losers"
       : "gainers") as MoverDirection,
     minPrice: num(sp.minPrice, DEFAULT_MIN_PRICE),
     maxPrice: num(sp.maxPrice, DEFAULT_MAX_PRICE),
-    series: str(sp.series),
+    series: strArray(sp.series).filter(Boolean),
+    exclude,
     limit: Math.max(1, Math.min(200, num(sp.limit, DEFAULT_LIMIT))),
     maxPriceChanges: Math.max(
       0,
@@ -67,7 +82,8 @@ export default async function Page({
       direction: filters.direction,
       minPrice: filters.minPrice,
       maxPrice: filters.maxPrice,
-      series: filters.series || undefined,
+      series: filters.series.length ? filters.series : undefined,
+      excludeCategoryIds: filters.exclude.length ? filters.exclude : undefined,
       limit: filters.limit,
       maxPriceChanges: filters.maxPriceChanges || undefined,
       maxCov: filters.maxCov || undefined,
@@ -79,15 +95,23 @@ export default async function Page({
   // Query string mirroring the current filters, for the export download (so the
   // ZIP matches exactly what's on screen). The volatility metrics are excluded
   // from copy/filenames, but the quality filters still shape the list.
-  const exportQuery = new URLSearchParams({
+  const exportParams = new URLSearchParams({
     direction: filters.direction,
     minPrice: String(filters.minPrice),
     maxPrice: String(filters.maxPrice),
     limit: String(filters.limit),
     maxPriceChanges: String(filters.maxPriceChanges),
     ...(filters.maxCov ? { maxCov: String(filters.maxCov) } : {}),
-    ...(filters.series ? { series: filters.series } : {}),
-  }).toString();
+  });
+  for (const s of filters.series) exportParams.append("series", s);
+  // Always emit exclude so the route sees the exact on-screen state (default-on
+  // otherwise; `none` marks an explicit empty selection). Mirrors Filters.push().
+  if (filters.exclude.length) {
+    for (const id of filters.exclude) exportParams.append("exclude", id);
+  } else {
+    exportParams.append("exclude", "none");
+  }
+  const exportQuery = exportParams.toString();
 
   return (
     <main className="mx-auto w-full max-w-5xl px-5 py-8">
@@ -105,14 +129,21 @@ export default async function Page({
         <ExportButton query={exportQuery} />
       </header>
 
-      <Filters seriesList={seriesList} current={filters} />
+      {/* Key on the numeric fields the toolbar mirrors in local state, so a
+          navigation that changes them externally (e.g. "Show all") remounts the
+          inputs to reflect the applied values instead of showing stale text. */}
+      <Filters
+        key={`${filters.minPrice}-${filters.maxPrice}-${filters.limit}-${filters.maxPriceChanges}-${filters.maxCov}`}
+        seriesList={seriesList}
+        current={filters}
+      />
 
       <div className="mt-6 overflow-hidden rounded-xl border border-black/10 dark:border-white/10">
         {rows.length === 0 ? (
           <p className="p-8 text-center text-sm opacity-60">
             No {filters.direction} in ${filters.minPrice}–${filters.maxPrice}
-            {filters.series ? ` for ${filters.series}` : ""}. Try widening the
-            band or running an ingest.
+            {filters.series.length ? ` for ${filters.series.join(", ")}` : ""}.
+            Try widening the band or running an ingest.
           </p>
         ) : (
           <>
