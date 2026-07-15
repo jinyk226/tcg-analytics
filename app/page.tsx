@@ -129,7 +129,14 @@ export default async function Page({
         <ExportButton query={exportQuery} />
       </header>
 
-      <Filters seriesList={seriesList} current={filters} />
+      {/* Key on the numeric fields the toolbar mirrors in local state, so a
+          navigation that changes them externally (e.g. "Show all") remounts the
+          inputs to reflect the applied values instead of showing stale text. */}
+      <Filters
+        key={`${filters.minPrice}-${filters.maxPrice}-${filters.limit}-${filters.maxPriceChanges}-${filters.maxCov}`}
+        seriesList={seriesList}
+        current={filters}
+      />
 
       <div className="mt-6 overflow-hidden rounded-xl border border-black/10 dark:border-white/10">
         {rows.length === 0 ? (
