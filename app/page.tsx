@@ -33,20 +33,32 @@ function copyText(r: MoverRow): string {
   const head = r.number ? `${r.name} (#${r.number})` : r.name;
   const variant = [r.printing, "NM"].filter(Boolean).join(", ");
   const value = r.value != null ? `$${r.value.toFixed(2)}` : "$—";
-  const pct = r.pct != null ? `${r.pct >= 0 ? "+" : ""}${r.pct.toFixed(1)}% (7d)` : "";
-  return [`${head} — ${variant}`, r.setName ?? "", value, pct].filter(Boolean).join("\n");
+  const pct =
+    r.pct != null ? `${r.pct >= 0 ? "+" : ""}${r.pct.toFixed(1)}% (7d)` : "";
+  return [`${head} — ${variant}`, r.setName ?? "", value, pct]
+    .filter(Boolean)
+    .join("\n");
 }
 
-export default async function Page({ searchParams }: { searchParams: SearchParams }) {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const sp = await searchParams;
 
   const filters: FilterState = {
-    direction: (str(sp.direction) === "losers" ? "losers" : "gainers") as MoverDirection,
+    direction: (str(sp.direction) === "losers"
+      ? "losers"
+      : "gainers") as MoverDirection,
     minPrice: num(sp.minPrice, DEFAULT_MIN_PRICE),
     maxPrice: num(sp.maxPrice, DEFAULT_MAX_PRICE),
     series: str(sp.series),
     limit: Math.max(1, Math.min(200, num(sp.limit, DEFAULT_LIMIT))),
-    maxPriceChanges: Math.max(0, num(sp.maxPriceChanges, DEFAULT_MAX_PRICE_CHANGES)),
+    maxPriceChanges: Math.max(
+      0,
+      num(sp.maxPriceChanges, DEFAULT_MAX_PRICE_CHANGES),
+    ),
     maxCov: Math.max(0, num(sp.maxCov, 0)),
   };
 
@@ -81,7 +93,9 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
     <main className="mx-auto w-full max-w-5xl px-5 py-8">
       <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Pokémon 7-Day Movers</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Pokémon 7-Day Movers
+          </h1>
           <p className="mt-1 text-sm opacity-60">
             {freshness
               ? `Data as of ${freshness.toLocaleString()}`
@@ -97,8 +111,8 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
         {rows.length === 0 ? (
           <p className="p-8 text-center text-sm opacity-60">
             No {filters.direction} in ${filters.minPrice}–${filters.maxPrice}
-            {filters.series ? ` for ${filters.series}` : ""}. Try widening the band or
-            running an ingest.
+            {filters.series ? ` for ${filters.series}` : ""}. Try widening the
+            band or running an ingest.
           </p>
         ) : (
           <>
@@ -115,61 +129,72 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
                 Chg 7d
               </span>
               <span className="w-16 shrink-0 text-right">7d %</span>
+              <span
+                className="w-16 shrink-0 text-right"
+                title="priceChange30d — 30-day percent change. A longer-horizon trend read alongside the 7-day move."
+              >
+                30d %
+              </span>
               <span className="w-9 shrink-0" />
             </div>
-          <ul className="divide-y divide-black/10 dark:divide-white/10">
-            {rows.map((r) => {
-              const thumb = tcgplayerImageUrl(r.tcgplayerId, "400x400");
-              return (
-                <li
-                  key={r.variantId}
-                  className="flex items-center gap-4 p-3 hover:bg-black/[0.02] dark:hover:bg-white/[0.03]"
-                >
-                  <span className="w-6 shrink-0 text-right text-sm tabular-nums opacity-40">
-                    {r.rank}
-                  </span>
-                  {thumb ? (
-                    <img
-                      src={thumb}
-                      alt={r.name}
-                      loading="lazy"
-                      className="h-16 w-12 shrink-0 rounded object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-16 w-12 shrink-0 items-center justify-center rounded bg-black/5 text-[10px] opacity-40 dark:bg-white/10">
-                      no img
-                    </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold">
-                      {r.name}
-                      {r.number ? <span className="opacity-50"> (#{r.number})</span> : null}
-                    </p>
-                    <p className="truncate text-sm opacity-60">
-                      {r.printing} · NM · {r.setName}
-                    </p>
-                  </div>
-                  <span className="w-20 shrink-0 text-right font-semibold tabular-nums">
-                    {r.value != null ? `$${r.value.toFixed(2)}` : "—"}
-                  </span>
-                  <span
-                    className="w-14 shrink-0 text-right text-sm tabular-nums opacity-70"
-                    title={
-                      r.cov7d != null
-                        ? `${r.priceChanges7d ?? 0} price change${r.priceChanges7d === 1 ? "" : "s"} in 7d · COV ${(r.cov7d * 100).toFixed(1)}%`
-                        : `${r.priceChanges7d ?? 0} price change${r.priceChanges7d === 1 ? "" : "s"} in 7d`
-                    }
+            <ul className="divide-y divide-black/10 dark:divide-white/10">
+              {rows.map((r) => {
+                const thumb = tcgplayerImageUrl(r.tcgplayerId, "400x400");
+                return (
+                  <li
+                    key={r.variantId}
+                    className="flex items-center gap-4 p-3 hover:bg-black/[0.02] dark:hover:bg-white/[0.03]"
                   >
-                    {r.priceChanges7d ?? "—"}
-                  </span>
-                  <span className="w-16 shrink-0 text-right">
-                    <PctBadge pct={r.pct} />
-                  </span>
-                  <CopyButton text={copyText(r)} />
-                </li>
-              );
-            })}
-          </ul>
+                    <span className="w-6 shrink-0 text-right text-sm tabular-nums opacity-40">
+                      {r.rank}
+                    </span>
+                    {thumb ? (
+                      <img
+                        src={thumb}
+                        alt={r.name}
+                        loading="lazy"
+                        className="h-16 w-12 shrink-0 rounded object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-16 w-12 shrink-0 items-center justify-center rounded bg-black/5 text-[10px] opacity-40 dark:bg-white/10">
+                        no img
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold">
+                        {r.name}
+                        {r.number ? (
+                          <span className="opacity-50"> (#{r.number})</span>
+                        ) : null}
+                      </p>
+                      <p className="truncate text-sm opacity-60">
+                        {r.printing} · NM · {r.setName}
+                      </p>
+                    </div>
+                    <span className="w-20 shrink-0 text-right font-semibold tabular-nums">
+                      {r.value != null ? `$${r.value.toFixed(2)}` : "—"}
+                    </span>
+                    <span
+                      className="w-14 shrink-0 text-right text-sm tabular-nums opacity-70"
+                      title={
+                        r.cov7d != null
+                          ? `${r.priceChanges7d ?? 0} price change${r.priceChanges7d === 1 ? "" : "s"} in 7d · COV ${(r.cov7d * 100).toFixed(1)}%`
+                          : `${r.priceChanges7d ?? 0} price change${r.priceChanges7d === 1 ? "" : "s"} in 7d`
+                      }
+                    >
+                      {r.priceChanges7d ?? "—"}
+                    </span>
+                    <span className="w-16 shrink-0 text-right">
+                      <PctBadge pct={r.pct} />
+                    </span>
+                    <span className="w-16 shrink-0 text-right">
+                      <PctBadge pct={r.pct30d} />
+                    </span>
+                    <CopyButton text={copyText(r)} />
+                  </li>
+                );
+              })}
+            </ul>
           </>
         )}
       </div>

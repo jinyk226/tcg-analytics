@@ -14,6 +14,7 @@ export interface MoverRow {
   condition: string | null;
   value: number | null; // latest price (USD)
   pct: number | null; // 7-day % change
+  pct30d: number | null; // 30-day % change
   priceChanges7d: number | null; // # of discrete price changes over 7d (churn)
   cov7d: number | null; // coefficient of variation over 7d (dispersion)
   tcgplayerId: string | null;
@@ -68,11 +69,16 @@ export async function getMovers(filters: MoverFilters): Promise<MoverRow[]> {
   const qualityAnd: object[] = [];
   if (maxPriceChanges && maxPriceChanges > 0) {
     qualityAnd.push({
-      OR: [{ priceChangesCount7d: null }, { priceChangesCount7d: { lte: maxPriceChanges } }],
+      OR: [
+        { priceChangesCount7d: null },
+        { priceChangesCount7d: { lte: maxPriceChanges } },
+      ],
     });
   }
   if (maxCov && maxCov > 0) {
-    qualityAnd.push({ OR: [{ covPrice7d: null }, { covPrice7d: { lte: maxCov } }] });
+    qualityAnd.push({
+      OR: [{ covPrice7d: null }, { covPrice7d: { lte: maxCov } }],
+    });
   }
 
   const variants = await db.cardVariant.findMany({
@@ -82,7 +88,10 @@ export async function getMovers(filters: MoverFilters): Promise<MoverRow[]> {
       priceChange7d: { not: null },
       avgPrice: { not: null },
       ...(series ? { card: { set: { series } } } : {}),
-      AND: [{ OR: [{ latestPrice: inBand }, { startPrice7d: inBand }] }, ...qualityAnd],
+      AND: [
+        { OR: [{ latestPrice: inBand }, { startPrice7d: inBand }] },
+        ...qualityAnd,
+      ],
     },
     include: { card: { include: { set: true } } },
     orderBy: { priceChange7d: direction === "gainers" ? "desc" : "asc" },
@@ -100,6 +109,7 @@ export async function getMovers(filters: MoverFilters): Promise<MoverRow[]> {
     condition: v.condition,
     value: v.latestPrice,
     pct: v.priceChange7d,
+    pct30d: v.priceChange30d,
     priceChanges7d: v.priceChangesCount7d,
     cov7d: v.covPrice7d,
     tcgplayerId: v.card.tcgplayerId,
