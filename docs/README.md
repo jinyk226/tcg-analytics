@@ -9,6 +9,11 @@ conventions and `specs/requirements.md` for product requirements.
   ingestion + 7-day gainers/losers view with per-row copy and batch image export.
   - [`plan.md`](./7day-movers-export/plan.md) — full approved implementation plan.
   - [`progress.md`](./7day-movers-export/progress.md) — ordered, phase-by-phase task checklist.
+- **[exclude-and-multiselect-filters/](./exclude-and-multiselect-filters/)** — multi-select
+  Series filter plus a default-on Exclude filter (curated slug-pattern categories) to drop
+  non-expansion products (WC decks, prize packs, trainer kits, junk promos) from the movers list.
+  - [`plan.md`](./exclude-and-multiselect-filters/plan.md) — full approved implementation plan.
+  - [`progress.md`](./exclude-and-multiselect-filters/progress.md) — ordered, phase-by-phase task checklist.
 - **[automated-ingest.md](./automated-ingest.md)** — a learning guide to how the scheduled
   (launchd) sync works: the plist, the every-other-day guard, nvm handling, and debugging.
 - **[volatility-quality-filter.md](./volatility-quality-filter.md)** — investigation of market
