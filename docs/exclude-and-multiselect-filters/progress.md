@@ -22,9 +22,9 @@ before the next depends on it. Status legend: `[ ]` todo · `[~]` in progress ·
 - [x] **Verify:** `/?series=Base&series=XY` and clean `/` (default exclude) render correctly *(plan Verification #2, #3)*.
 
 ## Phase 3 — Filters UI
-- [ ] 3.1 Create `app/_components/MultiSelect.tsx`: batching checkbox dropdown (draft state, commit on close, Select all / Clear, outside-click/Escape).
-- [ ] 3.2 `app/_components/Filters.tsx`: `FilterState` arrays; array-aware `push()`; two `<MultiSelect>` instances replacing `<select>`; Direction stays instant; add "Show all" link.
-- [ ] **Verify:** batching (no nav until close), Select all/Clear, count, Show all, round-trip on reload *(plan Verification #5, #6)*.
+- [x] 3.1 Create `app/_components/MultiSelect.tsx`: batching checkbox dropdown (draft state, commit on close, Select all / Clear, outside-click/Escape).
+- [x] 3.2 `app/_components/Filters.tsx`: `FilterState` arrays; array-aware `push()`; two `<MultiSelect>` instances replacing `<select>`; Direction stays instant; add "Show all" link.
+- [x] **Verify:** batching (no nav until close), Select all/Clear, count, Show all, round-trip on reload *(plan Verification #5, #6)*.
 
 ## Phase 4 — Export route
 - [ ] 4.1 `app/api/export/images/route.ts`: `getAll("series")`; exclude default-on (`has`/`getAll` + `none`); forward to `getMovers`.
