@@ -15,6 +15,39 @@ export interface JtVariant {
   maxPrice7d?: number | null;
   priceChangesCount7d?: number | null; // # of discrete price changes over 7d
   covPrice7d?: number | null; // coefficient of variation (stddev/mean) over 7d
+
+  // Extended multi-horizon analytics (30d / 90d / 1y / all-time). All percents
+  // are % values; *Date fields are ISO 8601 strings; counts are integers.
+  priceChange30d?: number | null;
+  priceChange90d?: number | null;
+  trendSlope7d?: number | null;
+  trendSlope30d?: number | null;
+  trendSlope90d?: number | null;
+  priceRelativeTo30dRange?: number | null; // 0..1 position within 30d [min,max]
+  priceRelativeTo90dRange?: number | null; // 0..1 position within 90d [min,max]
+  avgPrice30d?: number | null;
+  avgPrice90d?: number | null;
+  minPrice30d?: number | null;
+  maxPrice30d?: number | null;
+  minPrice90d?: number | null;
+  maxPrice90d?: number | null;
+  minPrice1y?: number | null;
+  maxPrice1y?: number | null;
+  minPriceAllTime?: number | null;
+  minPriceAllTimeDate?: string | null; // ISO 8601
+  maxPriceAllTime?: number | null;
+  maxPriceAllTimeDate?: string | null; // ISO 8601
+  stddevPopPrice7d?: number | null;
+  stddevPopPrice30d?: number | null;
+  stddevPopPrice90d?: number | null;
+  covPrice30d?: number | null;
+  covPrice90d?: number | null;
+  iqrPrice7d?: number | null;
+  iqrPrice30d?: number | null;
+  iqrPrice90d?: number | null;
+  priceChangesCount30d?: number | null;
+  priceChangesCount90d?: number | null;
+
   lastUpdated?: number; // epoch seconds
 }
 

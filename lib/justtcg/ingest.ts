@@ -20,15 +20,27 @@ export interface IngestOptions {
 /** Start-of-day (UTC) for the current run — snapshots dedupe per variant per day. */
 function todayUtc(): Date {
   const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
 }
 
 /** Entry ("7 days ago") price from current price + 7d % change. */
-function computeStartPrice(price: number | undefined, pct: number | null | undefined) {
+function computeStartPrice(
+  price: number | undefined,
+  pct: number | null | undefined,
+) {
   if (typeof price !== "number" || typeof pct !== "number") return null;
   const factor = 1 + pct / 100;
   if (factor <= 0) return null;
   return price / factor;
+}
+
+/** Parse an ISO 8601 string (JustTCG all-time-high/low dates) to Date, or null. */
+function parseIsoDate(iso: string | null | undefined): Date | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? null : d;
 }
 
 /** Sync all Pokémon sets/cards/prices into the local DB. Idempotent & resumable. */
@@ -52,7 +64,9 @@ export async function syncGamePokemon(opts: IngestOptions = {}): Promise<{
   for (const s of apiSets) {
     await upsertSet(game.id, s);
   }
-  log(`catalog: ${apiSets.length} sets; quota monthly=${client.quota.apiRequestsRemaining} daily=${client.quota.apiDailyRequestsRemaining}`);
+  log(
+    `catalog: ${apiSets.length} sets; quota monthly=${client.quota.apiRequestsRemaining} daily=${client.quota.apiDailyRequestsRemaining}`,
+  );
 
   // Decide which sets to process, least-recently-synced first (resumable).
   const cutoff = opts.incrementalHours
@@ -63,7 +77,9 @@ export async function syncGamePokemon(opts: IngestOptions = {}): Promise<{
     where: {
       gameId: game.id,
       ...(opts.onlySet ? { code: opts.onlySet } : {}),
-      ...(cutoff ? { OR: [{ lastSyncedAt: null }, { lastSyncedAt: { lt: cutoff } }] } : {}),
+      ...(cutoff
+        ? { OR: [{ lastSyncedAt: null }, { lastSyncedAt: { lt: cutoff } }] }
+        : {}),
     },
     orderBy: [{ lastSyncedAt: { sort: "asc", nulls: "first" } }, { id: "asc" }],
     ...(opts.maxSets ? { take: opts.maxSets } : {}),
@@ -80,15 +96,24 @@ export async function syncGamePokemon(opts: IngestOptions = {}): Promise<{
       let setCards = 0;
       let setVariants = 0;
       for await (const card of client.iterateSetCards(GAME_KEY, set.code)) {
-        const { variants } = await upsertCardWithVariants(game.id, set.id, card);
+        const { variants } = await upsertCardWithVariants(
+          game.id,
+          set.id,
+          card,
+        );
         cardsUpserted += 1;
         setCards += 1;
         variantsUpserted += variants;
         setVariants += variants;
       }
-      await db.set.update({ where: { id: set.id }, data: { lastSyncedAt: new Date() } });
+      await db.set.update({
+        where: { id: set.id },
+        data: { lastSyncedAt: new Date() },
+      });
       setsProcessed += 1;
-      log(`  ${set.code}: ${setCards} cards, ${setVariants} EN variants | monthly=${client.quota.apiRequestsRemaining} daily=${client.quota.apiDailyRequestsRemaining}`);
+      log(
+        `  ${set.code}: ${setCards} cards, ${setVariants} EN variants | monthly=${client.quota.apiRequestsRemaining} daily=${client.quota.apiDailyRequestsRemaining}`,
+      );
     }
   } catch (err) {
     if (err instanceof QuotaExhaustedError) {
@@ -121,7 +146,11 @@ async function upsertSet(gameId: number, s: JtSet) {
   });
 }
 
-async function upsertCardWithVariants(gameId: number, setId: number, card: JtCard) {
+async function upsertCardWithVariants(
+  gameId: number,
+  setId: number,
+  card: JtCard,
+) {
   const cardRow = await db.card.upsert({
     where: { justTcgId: card.id },
     update: {
@@ -171,12 +200,47 @@ async function upsertVariant(cardId: number, v: JtVariant, recordedAt: Date) {
     covPrice7d: v.covPrice7d ?? null,
     startPrice7d,
     apiLastUpdated,
+    // Extended multi-horizon analytics (nullish-coalesced; sparse in the API).
+    priceChange30d: v.priceChange30d ?? null,
+    priceChange90d: v.priceChange90d ?? null,
+    trendSlope7d: v.trendSlope7d ?? null,
+    trendSlope30d: v.trendSlope30d ?? null,
+    trendSlope90d: v.trendSlope90d ?? null,
+    priceRelativeTo30dRange: v.priceRelativeTo30dRange ?? null,
+    priceRelativeTo90dRange: v.priceRelativeTo90dRange ?? null,
+    avgPrice30d: v.avgPrice30d ?? null,
+    avgPrice90d: v.avgPrice90d ?? null,
+    minPrice30d: v.minPrice30d ?? null,
+    maxPrice30d: v.maxPrice30d ?? null,
+    minPrice90d: v.minPrice90d ?? null,
+    maxPrice90d: v.maxPrice90d ?? null,
+    minPrice1y: v.minPrice1y ?? null,
+    maxPrice1y: v.maxPrice1y ?? null,
+    minPriceAllTime: v.minPriceAllTime ?? null,
+    minPriceAllTimeDate: parseIsoDate(v.minPriceAllTimeDate),
+    maxPriceAllTime: v.maxPriceAllTime ?? null,
+    maxPriceAllTimeDate: parseIsoDate(v.maxPriceAllTimeDate),
+    stddevPopPrice7d: v.stddevPopPrice7d ?? null,
+    stddevPopPrice30d: v.stddevPopPrice30d ?? null,
+    stddevPopPrice90d: v.stddevPopPrice90d ?? null,
+    covPrice30d: v.covPrice30d ?? null,
+    covPrice90d: v.covPrice90d ?? null,
+    iqrPrice7d: v.iqrPrice7d ?? null,
+    iqrPrice30d: v.iqrPrice30d ?? null,
+    iqrPrice90d: v.iqrPrice90d ?? null,
+    priceChangesCount30d: v.priceChangesCount30d ?? null,
+    priceChangesCount90d: v.priceChangesCount90d ?? null,
     lastSeenAt: new Date(),
   };
 
   const variant = await db.cardVariant.upsert({
     where: {
-      cardId_printing_condition_language: { cardId, printing, condition, language },
+      cardId_printing_condition_language: {
+        cardId,
+        printing,
+        condition,
+        language,
+      },
     },
     update: data,
     create: { cardId, printing, condition, language, ...data },

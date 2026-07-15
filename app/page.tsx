@@ -160,6 +160,12 @@ export default async function Page({
                 Chg 7d
               </span>
               <span className="w-16 shrink-0 text-right">7d %</span>
+              <span
+                className="w-16 shrink-0 text-right"
+                title="priceChange30d — 30-day percent change. A longer-horizon trend read alongside the 7-day move."
+              >
+                30d %
+              </span>
               <span className="w-9 shrink-0" />
             </div>
             <ul className="divide-y divide-black/10 dark:divide-white/10">
@@ -211,6 +217,9 @@ export default async function Page({
                     </span>
                     <span className="w-16 shrink-0 text-right">
                       <PctBadge pct={r.pct} />
+                    </span>
+                    <span className="w-16 shrink-0 text-right">
+                      <PctBadge pct={r.pct30d} />
                     </span>
                     <CopyButton text={copyText(r)} />
                   </li>

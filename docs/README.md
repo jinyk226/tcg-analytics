@@ -9,6 +9,11 @@ conventions and `specs/requirements.md` for product requirements.
   ingestion + 7-day gainers/losers view with per-row copy and batch image export.
   - [`plan.md`](./7day-movers-export/plan.md) — full approved implementation plan.
   - [`progress.md`](./7day-movers-export/progress.md) — ordered, phase-by-phase task checklist.
+- **[predictive-price-fields/](./predictive-price-fields/)** — a 30-day % column plus preemptive
+  capture of JustTCG's 30d/90d/1y/all-time technical fields (momentum, trend slope, range position,
+  support/resistance, volatility) for future supply/demand screening.
+  - [`plan.md`](./predictive-price-fields/plan.md) — full approved implementation plan.
+  - [`progress.md`](./predictive-price-fields/progress.md) — ordered, phase-by-phase task checklist.
 - **[exclude-and-multiselect-filters/](./exclude-and-multiselect-filters/)** — multi-select
   Series filter plus a default-on Exclude filter (curated slug-pattern categories) to drop
   non-expansion products (WC decks, prize packs, trainer kits, junk promos) from the movers list.

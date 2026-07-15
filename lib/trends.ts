@@ -15,6 +15,7 @@ export interface MoverRow {
   condition: string | null;
   value: number | null; // latest price (USD)
   pct: number | null; // 7-day % change
+  pct30d: number | null; // 30-day % change
   priceChanges7d: number | null; // # of discrete price changes over 7d (churn)
   cov7d: number | null; // coefficient of variation over 7d (dispersion)
   tcgplayerId: string | null;
@@ -129,6 +130,7 @@ export async function getMovers(filters: MoverFilters): Promise<MoverRow[]> {
     condition: v.condition,
     value: v.latestPrice,
     pct: v.priceChange7d,
+    pct30d: v.priceChange30d,
     priceChanges7d: v.priceChangesCount7d,
     cov7d: v.covPrice7d,
     tcgplayerId: v.card.tcgplayerId,
