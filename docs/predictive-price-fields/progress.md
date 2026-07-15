@@ -3,9 +3,11 @@
 Tracks execution of [`plan.md`](./plan.md). Ordered so each phase is independently verifiable.
 Status legend: `[ ]` todo · `[~]` in progress · `[x]` done.
 
-**Status:** ✅ Code complete (2026-07-15) on branch `feature/predictive-price-fields`. Migration
-applied, ingest maps all 29 fields, 30d % column verified via Playwright (real value on a re-ingested
-card, null-tolerant "—" elsewhere), lint + build clean. Full backfill run to populate all sets.
+**Status:** ✅ Complete (2026-07-15) on branch `feature/predictive-price-fields`. Migration applied,
+ingest maps all 29 fields, 30d % column verified via Playwright (real value on a re-ingested card,
+null-tolerant "—" elsewhere), lint + build clean. Backfill done: 215 sets / 31,420 cards / 183,414
+variants (~13 min, ~421 requests); 30d % populated on 171,362 variants (93% — the rest genuinely null
+in the API), all-time-high on ~100%.
 
 ---
 
