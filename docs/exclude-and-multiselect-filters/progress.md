@@ -3,7 +3,7 @@
 Tracks execution of [`plan.md`](./plan.md). Ordered so each phase is independently verifiable
 before the next depends on it. Status legend: `[ ]` todo · `[~]` in progress · `[x]` done.
 
-**Status:** 🚧 In progress — executing on branch `feature/exclude-and-multiselect-filters`.
+**Status:** ✅ Complete — shipped on branch `feature/exclude-and-multiselect-filters` (2026-07-15). Multi-select Series + default-on Exclude (3 curated categories) verified end-to-end: query logic against `dev.db`, batching dropdown / commit-on-close / Show all via Playwright, and export ZIP parity. Lint + build clean, 0 console errors.
 
 ---
 
@@ -31,6 +31,13 @@ before the next depends on it. Status legend: `[ ]` todo · `[~]` in progress ·
 - [x] **Verify:** ZIP file count matches on-screen rows; `?exclude=none` yields the larger set *(plan Verification #7)*.
 
 ## Phase 5 — Wrap-up
-- [ ] 5.1 Update `docs/README.md` `## Contents` with this feature (plan.md / progress.md links).
-- [ ] 5.2 `npm run lint` + `npx tsc --noEmit` clean; commit in small increments (`/commit`).
-- [ ] 5.3 Mark this file ✅ Complete with concrete numbers + date; note roadmap follow-ups (e.g. sub-collection exclusions, promo-list upkeep).
+- [x] 5.1 Update `docs/README.md` `## Contents` with this feature (plan.md / progress.md links).
+- [x] 5.2 `npm run lint` + `npx tsc --noEmit` clean; commit in small increments.
+- [x] 5.3 Mark this file ✅ Complete with concrete numbers + date; note roadmap follow-ups (e.g. sub-collection exclusions, promo-list upkeep).
+
+### Incidental fix
+- [x] Toolbar numeric inputs now resync after external navigation (e.g. "Show all") via a `key` on `<Filters>` — previously local `useState` showed stale price text while results used the new band.
+
+### Roadmap follow-ups
+- Sub-collection exclusions (Radiant/Classic Collection) were left out (false-positive risk vs "Legendary Collection").
+- The `promos` curated list needs upkeep as new junk-promo sets are ingested (Alt-Art / WoTC / Black Star stay visible by design).
