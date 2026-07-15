@@ -9,6 +9,11 @@ conventions and `specs/requirements.md` for product requirements.
   ingestion + 7-day gainers/losers view with per-row copy and batch image export.
   - [`plan.md`](./7day-movers-export/plan.md) — full approved implementation plan.
   - [`progress.md`](./7day-movers-export/progress.md) — ordered, phase-by-phase task checklist.
+- **[predictive-price-fields/](./predictive-price-fields/)** — a 30-day % column plus preemptive
+  capture of JustTCG's 30d/90d/1y/all-time technical fields (momentum, trend slope, range position,
+  support/resistance, volatility) for future supply/demand screening.
+  - [`plan.md`](./predictive-price-fields/plan.md) — full approved implementation plan.
+  - [`progress.md`](./predictive-price-fields/progress.md) — ordered, phase-by-phase task checklist.
 - **[automated-ingest.md](./automated-ingest.md)** — a learning guide to how the scheduled
   (launchd) sync works: the plist, the every-other-day guard, nvm handling, and debugging.
 - **[volatility-quality-filter.md](./volatility-quality-filter.md)** — investigation of market
