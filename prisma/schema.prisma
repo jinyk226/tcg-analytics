@@ -122,6 +122,51 @@ model CardVariant {
   /// JustTCG variant `lastUpdated` (epoch seconds) as a timestamp.
   apiLastUpdated  DateTime?
 
+  /// --- Extended multi-horizon analytics (JustTCG) -------------------------
+  /// Raw stat fields for predictive/technical screening. All nullable (sparse
+  /// API data). Composite signals (MA-cross, %B, distance-to-ATH, health score)
+  /// are derived from these in the query layer, not stored. NOTE: JustTCG has
+  /// no volume/quantity-sold field — the *Count fields are a repricing-frequency
+  /// (attention/liquidity) proxy, not true demand.
+  /// Momentum: % change over each window (7d above; 30d/90d here).
+  priceChange30d  Float?
+  priceChange90d  Float?
+  /// Linear-regression slope of price over each window (trend robustness).
+  trendSlope7d    Float?
+  trendSlope30d   Float?
+  trendSlope90d   Float?
+  /// Position within the window's [min,max] range, 0..1 (stochastic-style
+  /// overbought/oversold). ~0 = oversold, ~1 = extended/near-high.
+  priceRelativeTo30dRange Float?
+  priceRelativeTo90dRange Float?
+  /// Window averages (moving-average-cross signals vs latestPrice).
+  avgPrice30d     Float?
+  avgPrice90d     Float?
+  /// Support/resistance anchors per window + 1y + all-time (with dates).
+  minPrice30d         Float?
+  maxPrice30d         Float?
+  minPrice90d         Float?
+  maxPrice90d         Float?
+  minPrice1y          Float?
+  maxPrice1y          Float?
+  minPriceAllTime     Float?
+  minPriceAllTimeDate DateTime?
+  maxPriceAllTime     Float?
+  maxPriceAllTimeDate DateTime?
+  /// Dispersion: population stddev (band width), coefficient of variation
+  /// (unit-free screening), and IQR (outlier-resistant) per window.
+  stddevPopPrice7d  Float?
+  stddevPopPrice30d Float?
+  stddevPopPrice90d Float?
+  covPrice30d       Float?
+  covPrice90d       Float?
+  iqrPrice7d        Float?
+  iqrPrice30d       Float?
+  iqrPrice90d       Float?
+  /// Repricing frequency per window (liquidity/attention proxy, NOT volume).
+  priceChangesCount30d Int?
+  priceChangesCount90d Int?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -131,6 +176,7 @@ model CardVariant {
   @@unique([cardId, printing, condition, language])
   @@index([cardId])
   @@index([priceChange7d])
+  @@index([priceChange30d])
   @@index([latestPrice])
   @@index([startPrice7d])
   @@index([priceChangesCount7d])
