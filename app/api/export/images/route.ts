@@ -9,14 +9,17 @@ import {
   type MoverDirection,
   type MoverRow,
 } from "@/lib/trends";
+import { DEFAULT_EXCLUDE_IDS, EXCLUDE_IDS } from "@/lib/exclude-categories";
 
 const FETCH_CONCURRENCY = 6;
 
 function slugify(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "") || "card";
+  return (
+    s
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "card"
+  );
 }
 
 /** Fetch a card image, trying each CDN size in turn; null if none resolve. */
@@ -26,7 +29,10 @@ async function fetchImage(tcgplayerId: string): Promise<Uint8Array | null> {
     if (!url) return null;
     try {
       const res = await fetch(url);
-      if (res.ok && (res.headers.get("content-type") ?? "").startsWith("image/")) {
+      if (
+        res.ok &&
+        (res.headers.get("content-type") ?? "").startsWith("image/")
+      ) {
         return new Uint8Array(await res.arrayBuffer());
       }
     } catch {
@@ -38,21 +44,31 @@ async function fetchImage(tcgplayerId: string): Promise<Uint8Array | null> {
 
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
-  const direction: MoverDirection = params.get("direction") === "losers" ? "losers" : "gainers";
+  const direction: MoverDirection =
+    params.get("direction") === "losers" ? "losers" : "gainers";
   const minPrice = Number(params.get("minPrice")) || DEFAULT_MIN_PRICE;
   const maxPrice = Number(params.get("maxPrice")) || DEFAULT_MAX_PRICE;
-  const series = params.get("series") || undefined;
-  const limit = Math.max(1, Math.min(200, Number(params.get("limit")) || DEFAULT_LIMIT));
+  const series = params.getAll("series");
+  const limit = Math.max(
+    1,
+    Math.min(200, Number(params.get("limit")) || DEFAULT_LIMIT),
+  );
   const maxPriceChanges = params.has("maxPriceChanges")
     ? Math.max(0, Number(params.get("maxPriceChanges")) || 0)
     : DEFAULT_MAX_PRICE_CHANGES;
   const maxCov = Math.max(0, Number(params.get("maxCov")) || 0);
+  // Exclude is ON by default: absent param → all categories; explicit (incl. the
+  // `none` sentinel → []) is honored. Mirrors app/page.tsx.
+  const exclude = params.has("exclude")
+    ? params.getAll("exclude").filter((id) => EXCLUDE_IDS.has(id))
+    : [...DEFAULT_EXCLUDE_IDS];
 
   const rows = await getMovers({
     direction,
     minPrice,
     maxPrice,
-    series,
+    series: series.length ? series : undefined,
+    excludeCategoryIds: exclude.length ? exclude : undefined,
     limit,
     maxPriceChanges: maxPriceChanges || undefined,
     maxCov: maxCov || undefined,

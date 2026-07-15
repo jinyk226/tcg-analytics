@@ -27,8 +27,8 @@ before the next depends on it. Status legend: `[ ]` todo · `[~]` in progress ·
 - [x] **Verify:** batching (no nav until close), Select all/Clear, count, Show all, round-trip on reload *(plan Verification #5, #6)*.
 
 ## Phase 4 — Export route
-- [ ] 4.1 `app/api/export/images/route.ts`: `getAll("series")`; exclude default-on (`has`/`getAll` + `none`); forward to `getMovers`.
-- [ ] **Verify:** ZIP file count matches on-screen rows; `?exclude=none` yields the larger set *(plan Verification #7)*.
+- [x] 4.1 `app/api/export/images/route.ts`: `getAll("series")`; exclude default-on (`has`/`getAll` + `none`); forward to `getMovers`.
+- [x] **Verify:** ZIP file count matches on-screen rows; `?exclude=none` yields the larger set *(plan Verification #7)*.
 
 ## Phase 5 — Wrap-up
 - [ ] 5.1 Update `docs/README.md` `## Contents` with this feature (plan.md / progress.md links).
