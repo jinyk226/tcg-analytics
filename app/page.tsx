@@ -179,15 +179,20 @@ export default async function Page({
                   </span>
                   <CardThumb tcgplayerId={r.tcgplayerId} alt={r.name} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold">
-                      {r.name}
-                      {r.number ? (
-                        <span className="opacity-50"> (#{r.number})</span>
-                      ) : null}
-                    </p>
-                    <p className="truncate text-sm opacity-60">
-                      {r.printing} · NM · {r.setName}
-                    </p>
+                    <a
+                      href={`https://www.tcgplayer.com/product/${r.tcgplayerId}`}
+                      target="_blank"
+                    >
+                      <p className="truncate font-semibold">
+                        {r.name}
+                        {r.number ? (
+                          <span className="opacity-50"> (#{r.number})</span>
+                        ) : null}
+                      </p>
+                      <p className="truncate text-sm opacity-60">
+                        {r.printing} · NM · {r.setName}
+                      </p>
+                    </a>
                   </div>
                   <span className="w-20 shrink-0 text-right font-semibold tabular-nums">
                     {r.value != null ? `$${r.value.toFixed(2)}` : "—"}
