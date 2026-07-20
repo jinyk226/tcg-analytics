@@ -46,6 +46,7 @@ function parseIsoDate(iso: string | null | undefined): Date | null {
 /** Sync all Pokémon sets/cards/prices into the local DB. Idempotent & resumable. */
 export async function syncGamePokemon(opts: IngestOptions = {}): Promise<{
   setsProcessed: number;
+  setsFailed: number;
   cardsUpserted: number;
   variantsUpserted: number;
   stoppedEarly: boolean;
@@ -86,6 +87,7 @@ export async function syncGamePokemon(opts: IngestOptions = {}): Promise<{
   });
 
   let setsProcessed = 0;
+  let setsFailed = 0;
   let cardsUpserted = 0;
   let variantsUpserted = 0;
   let stoppedEarly = false;
@@ -93,27 +95,41 @@ export async function syncGamePokemon(opts: IngestOptions = {}): Promise<{
   try {
     for (const set of setsToProcess) {
       if (!set.code) continue; // code holds the JustTCG slug
-      let setCards = 0;
-      let setVariants = 0;
-      for await (const card of client.iterateSetCards(GAME_KEY, set.code)) {
-        const { variants } = await upsertCardWithVariants(
-          game.id,
-          set.id,
-          card,
+      try {
+        let setCards = 0;
+        let setVariants = 0;
+        for await (const card of client.iterateSetCards(GAME_KEY, set.code)) {
+          const { variants } = await upsertCardWithVariants(
+            game.id,
+            set.id,
+            card,
+          );
+          cardsUpserted += 1;
+          setCards += 1;
+          variantsUpserted += variants;
+          setVariants += variants;
+        }
+        // Only stamp lastSyncedAt on a clean full pass of the set. A set that
+        // failed midway keeps its old timestamp, so it stays at the front of the
+        // resume queue and is retried (idempotently) on the next run.
+        await db.set.update({
+          where: { id: set.id },
+          data: { lastSyncedAt: new Date() },
+        });
+        setsProcessed += 1;
+        log(
+          `  ${set.code}: ${setCards} cards, ${setVariants} EN variants | monthly=${client.quota.apiRequestsRemaining} daily=${client.quota.apiDailyRequestsRemaining}`,
         );
-        cardsUpserted += 1;
-        setCards += 1;
-        variantsUpserted += variants;
-        setVariants += variants;
+      } catch (err) {
+        // Quota exhaustion is terminal — rethrow to stop the whole run.
+        if (err instanceof QuotaExhaustedError) throw err;
+        // Any other failure (network reset after retries, a bad set, …) is
+        // isolated to this set: log and continue so one set can't strand the
+        // rest of the catalog.
+        setsFailed += 1;
+        const msg = err instanceof Error ? err.message : String(err);
+        log(`  ${set.code}: FAILED — ${msg} (skipped; will retry next run)`);
       }
-      await db.set.update({
-        where: { id: set.id },
-        data: { lastSyncedAt: new Date() },
-      });
-      setsProcessed += 1;
-      log(
-        `  ${set.code}: ${setCards} cards, ${setVariants} EN variants | monthly=${client.quota.apiRequestsRemaining} daily=${client.quota.apiDailyRequestsRemaining}`,
-      );
     }
   } catch (err) {
     if (err instanceof QuotaExhaustedError) {
@@ -124,7 +140,7 @@ export async function syncGamePokemon(opts: IngestOptions = {}): Promise<{
     }
   }
 
-  return { setsProcessed, cardsUpserted, variantsUpserted, stoppedEarly };
+  return { setsProcessed, setsFailed, cardsUpserted, variantsUpserted, stoppedEarly };
 }
 
 async function upsertSet(gameId: number, s: JtSet) {

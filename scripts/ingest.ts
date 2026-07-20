@@ -48,7 +48,10 @@ async function main() {
   const secs = ((Date.now() - started) / 1000).toFixed(1);
   console.log(
     `\nDone in ${secs}s — sets=${result.setsProcessed}, cards=${result.cardsUpserted}, ` +
-      `variants=${result.variantsUpserted}${result.stoppedEarly ? " (stopped early: quota)" : ""}.`,
+      `variants=${result.variantsUpserted}` +
+      (result.setsFailed ? `, failed=${result.setsFailed}` : "") +
+      (result.stoppedEarly ? " (stopped early: quota)" : "") +
+      ".",
   );
 }
 
