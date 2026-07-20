@@ -24,6 +24,9 @@ conventions and `specs/requirements.md` for product requirements.
 - **[volatility-quality-filter.md](./volatility-quality-filter.md)** — investigation of market
   volatility (`priceChangesCount7d` / `covPrice7d`) and the churn-based quality filter that keeps
   clean movers and drops thin/thrashy ones.
+- **[tcgplayer-latest-sales.md](./tcgplayer-latest-sales.md)** — the on-demand Sales column:
+  real sale activity per printing/condition from TCGplayer's internal endpoint, used to flag thin
+  markets. Documents the 5-sale window cap and the numeric filter ids.
 
 ## Conventions
 
