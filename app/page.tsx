@@ -2,6 +2,12 @@ import { Filters, type FilterState } from "@/app/_components/Filters";
 import { CardThumb } from "@/app/_components/CardThumb";
 import { CopyButton } from "@/app/_components/CopyButton";
 import { ExportButton } from "@/app/_components/ExportButton";
+import { SalesButton } from "@/app/_components/SalesButton";
+import { SalesCell } from "@/app/_components/SalesCell";
+import {
+  SalesProvider,
+  type SalesTarget,
+} from "@/app/_components/SalesProvider";
 import { PctBadge } from "@/app/_ui/PctBadge";
 import {
   DEFAULT_LIMIT,
@@ -113,113 +119,137 @@ export default async function Page({
   }
   const exportQuery = exportParams.toString();
 
-  return (
-    <main className="mx-auto w-full max-w-5xl px-5 py-8">
-      <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Pokémon 7-Day Movers
-          </h1>
-          <p className="mt-1 text-sm opacity-60">
-            {freshness
-              ? `Data as of ${freshness.toLocaleString()}`
-              : "No data yet — run `npm run ingest`."}
-          </p>
-        </div>
-        <ExportButton query={exportQuery} />
-      </header>
+  // Rows the sales sweep can look up (needs a TCGplayer product id).
+  const salesTargets: SalesTarget[] = rows
+    .filter((r) => r.tcgplayerId)
+    .map((r) => ({
+      variantId: r.variantId,
+      productId: r.tcgplayerId!,
+      condition: r.condition,
+      printing: r.printing,
+    }));
 
-      {/* Key on the numeric fields the toolbar mirrors in local state, so a
+  return (
+    <SalesProvider targets={salesTargets}>
+      <main className="mx-auto w-full max-w-5xl px-5 py-8">
+        <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Pokémon 7-Day Movers
+            </h1>
+            <p className="mt-1 text-sm opacity-60">
+              {freshness
+                ? `Data as of ${freshness.toLocaleString()}`
+                : "No data yet — run `npm run ingest`."}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <SalesButton />
+            <ExportButton query={exportQuery} />
+          </div>
+        </header>
+
+        {/* Key on the numeric fields the toolbar mirrors in local state, so a
           navigation that changes them externally (e.g. "Show all") remounts the
           inputs to reflect the applied values instead of showing stale text. */}
-      <Filters
-        key={`${filters.minPrice}-${filters.maxPrice}-${filters.limit}-${filters.maxPriceChanges}-${filters.maxCov}`}
-        seriesList={seriesList}
-        current={filters}
-      />
+        <Filters
+          key={`${filters.minPrice}-${filters.maxPrice}-${filters.limit}-${filters.maxPriceChanges}-${filters.maxCov}`}
+          seriesList={seriesList}
+          current={filters}
+        />
 
-      <div className="mt-6 overflow-hidden rounded-xl border border-black/10 dark:border-white/10">
-        {rows.length === 0 ? (
-          <p className="p-8 text-center text-sm opacity-60">
-            No {filters.direction} in ${filters.minPrice}–${filters.maxPrice}
-            {filters.series.length ? ` for ${filters.series.join(", ")}` : ""}.
-            Try widening the band or running an ingest.
-          </p>
-        ) : (
-          <>
-            {/* Column header (aligns with the right-side cells of each row). */}
-            <div className="flex items-center gap-4 border-b border-black/10 px-3 py-2 text-[11px] font-medium uppercase tracking-wide opacity-45 dark:border-white/10">
-              <span className="w-6 shrink-0" />
-              <span className="w-12 shrink-0" />
-              <span className="min-w-0 flex-1">Card</span>
-              <span className="w-20 shrink-0 text-right">Value</span>
-              <span
-                className="w-14 shrink-0 text-right"
-                title="priceChangesCount7d — number of discrete price changes in the last 7 days. Lower = cleaner move; high = thin/churny market."
-              >
-                Chg 7d
-              </span>
-              <span className="w-16 shrink-0 text-right">7d %</span>
-              <span
-                className="w-16 shrink-0 text-right"
-                title="priceChange30d — 30-day percent change. A longer-horizon trend read alongside the 7-day move."
-              >
-                30d %
-              </span>
-              <span className="w-20 shrink-0" />
-            </div>
-            <ul className="divide-y divide-black/10 dark:divide-white/10">
-              {rows.map((r) => (
-                <li
-                  key={r.variantId}
-                  className="flex items-center gap-4 p-3 hover:bg-black/[0.02] dark:hover:bg-white/[0.03]"
+        <div className="mt-6 overflow-hidden rounded-xl border border-black/10 dark:border-white/10">
+          {rows.length === 0 ? (
+            <p className="p-8 text-center text-sm opacity-60">
+              No {filters.direction} in ${filters.minPrice}–${filters.maxPrice}
+              {filters.series.length ? ` for ${filters.series.join(", ")}` : ""}
+              . Try widening the band or running an ingest.
+            </p>
+          ) : (
+            <>
+              {/* Column header (aligns with the right-side cells of each row). */}
+              <div className="flex items-center gap-4 border-b border-black/10 px-3 py-2 text-[11px] font-medium uppercase tracking-wide opacity-45 dark:border-white/10">
+                <span className="w-6 shrink-0" />
+                <span className="w-12 shrink-0" />
+                <span className="min-w-0 flex-1">Card</span>
+                <span className="w-20 shrink-0 text-right">Value</span>
+                <span
+                  className="w-14 shrink-0 text-right"
+                  title="priceChangesCount7d — number of discrete price changes in the last 7 days. Lower = cleaner move; high = thin/churny market."
                 >
-                  <span className="w-6 shrink-0 text-right text-sm tabular-nums opacity-40">
-                    {r.rank}
-                  </span>
-                  <CardThumb tcgplayerId={r.tcgplayerId} alt={r.name} />
-                  <div className="min-w-0 flex-1">
-                    <a
-                      href={`https://www.tcgplayer.com/product/${r.tcgplayerId}`}
-                      target="_blank"
-                    >
-                      <p className="truncate font-semibold">
-                        {r.name}
-                        {r.number ? (
-                          <span className="opacity-50"> (#{r.number})</span>
-                        ) : null}
-                      </p>
-                      <p className="truncate text-sm opacity-60">
-                        {r.printing} · NM · {r.setName}
-                      </p>
-                    </a>
-                  </div>
-                  <span className="w-20 shrink-0 text-right font-semibold tabular-nums">
-                    {r.value != null ? `$${r.value.toFixed(2)}` : "—"}
-                  </span>
-                  <span
-                    className="w-14 shrink-0 text-right text-sm tabular-nums opacity-70"
-                    title={
-                      r.cov7d != null
-                        ? `${r.priceChanges7d ?? 0} price change${r.priceChanges7d === 1 ? "" : "s"} in 7d · COV ${(r.cov7d * 100).toFixed(1)}%`
-                        : `${r.priceChanges7d ?? 0} price change${r.priceChanges7d === 1 ? "" : "s"} in 7d`
-                    }
+                  Chg 7d
+                </span>
+                <span className="w-16 shrink-0 text-right">7d %</span>
+                <span
+                  className="w-16 shrink-0 text-right"
+                  title="priceChange30d — 30-day percent change. A longer-horizon trend read alongside the 7-day move."
+                >
+                  30d %
+                </span>
+                <span
+                  className="w-24 shrink-0 text-right"
+                  title="Recent TCGplayer sales for this printing/condition, as sales / days elapsed. The window is capped at 5 sales, so read it as a rate — ⚠ marks a thin market."
+                >
+                  Sales
+                </span>
+                <span className="w-20 shrink-0" />
+              </div>
+              <ul className="divide-y divide-black/10 dark:divide-white/10">
+                {rows.map((r) => (
+                  <li
+                    key={r.variantId}
+                    className="flex items-center gap-4 p-3 hover:bg-black/[0.02] dark:hover:bg-white/[0.03]"
                   >
-                    {r.priceChanges7d ?? "—"}
-                  </span>
-                  <span className="w-16 shrink-0 text-right">
-                    <PctBadge pct={r.pct} />
-                  </span>
-                  <span className="w-16 shrink-0 text-right">
-                    <PctBadge pct={r.pct30d} />
-                  </span>
-                  <CopyButton text={copyText(r)} />
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </div>
-    </main>
+                    <span className="w-6 shrink-0 text-right text-sm tabular-nums opacity-40">
+                      {r.rank}
+                    </span>
+                    <CardThumb tcgplayerId={r.tcgplayerId} alt={r.name} />
+                    <div className="min-w-0 flex-1">
+                      <a
+                        href={`https://www.tcgplayer.com/product/${r.tcgplayerId}`}
+                        target="_blank"
+                      >
+                        <p className="truncate font-semibold">
+                          {r.name}
+                          {r.number ? (
+                            <span className="opacity-50"> (#{r.number})</span>
+                          ) : null}
+                        </p>
+                        <p className="truncate text-sm opacity-60">
+                          {r.printing} · NM · {r.setName}
+                        </p>
+                      </a>
+                    </div>
+                    <span className="w-20 shrink-0 text-right font-semibold tabular-nums">
+                      {r.value != null ? `$${r.value.toFixed(2)}` : "—"}
+                    </span>
+                    <span
+                      className="w-14 shrink-0 text-right text-sm tabular-nums opacity-70"
+                      title={
+                        r.cov7d != null
+                          ? `${r.priceChanges7d ?? 0} price change${r.priceChanges7d === 1 ? "" : "s"} in 7d · COV ${(r.cov7d * 100).toFixed(1)}%`
+                          : `${r.priceChanges7d ?? 0} price change${r.priceChanges7d === 1 ? "" : "s"} in 7d`
+                      }
+                    >
+                      {r.priceChanges7d ?? "—"}
+                    </span>
+                    <span className="w-16 shrink-0 text-right">
+                      <PctBadge pct={r.pct} />
+                    </span>
+                    <span className="w-16 shrink-0 text-right">
+                      <PctBadge pct={r.pct30d} />
+                    </span>
+                    <span className="w-24 shrink-0 text-right">
+                      <SalesCell variantId={r.variantId} />
+                    </span>
+                    <CopyButton text={copyText(r)} />
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      </main>
+    </SalesProvider>
   );
 }
